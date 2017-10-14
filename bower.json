@@ -1,0 +1,14 @@
+{
+  "name": "react-hola-mundo",
+  "description": "pruebas con react",
+  "main": "",
+  "authors": [
+    "Miguel Carboni <miguel.carboni@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "dependencies": {
+    "react": "15.5.4"
+  }
+}

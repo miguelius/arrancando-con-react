@@ -10,6 +10,8 @@ var path = require('path');
 var rename = require('gulp-rename');
 var Q = require('q');
 var babel = require('gulp-babel');
+var browserSync = require("browser-sync");//.create();
+var reload = browserSync.reload;
 
 // == PATH STRINGS ========
 
@@ -87,6 +89,9 @@ pipes.builtVendorScriptsProd = function() {
 
 pipes.validatedDevServerScripts = function() {
     return gulp.src(paths.scriptsDevServer)
+        .pipe(babel({
+            presets: ["react", "es2015"]
+        }))
         .pipe(eslint())
         .pipe(eslint.format());
 };
@@ -105,11 +110,7 @@ pipes.builtPartialsDev = function() {
 pipes.scriptedPartials = function() {
     return pipes.validatedPartials()
         .pipe(plugins.htmlhint.failReporter())
-        .pipe(plugins.htmlmin({collapseWhitespace: true, removeComments: true}))
-        .pipe(plugins.ngHtml2js({
-            moduleName: "seguimiento",
-            declareModule: false
-        }));
+        .pipe(plugins.htmlmin({collapseWhitespace: true, removeComments: true}));
 };
 
 pipes.builtStylesDev = function() {
@@ -285,77 +286,70 @@ gulp.task('clean-build-app-prod', ['clean-prod'], pipes.builtAppProd);
 // clean, build, and watch live changes to the dev environment
 gulp.task('watch-dev', ['clean-build-app-dev', 'validate-devserver-scripts'], function() {
 
-    // start nodemon to auto-reload the dev server
-    plugins.nodemon({ script: 'server.js', ext: 'js', watch: ['devServer/'], env: {NODE_ENV : 'development'} })
-        .on('change', ['validate-devserver-scripts'])
-        .on('restart', function () {
-            console.log('[nodemon] restarted dev server');
-        });
-
-    // start live-reload server
-    plugins.livereload.listen({ start: true });
+    // Serve files from the root of this project
+    browserSync.init({
+        server: {
+            baseDir: paths.distDev
+        }
+    });
 
     // watch index
     gulp.watch(paths.index, function() {
         return pipes.builtIndexDev()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch app scripts
     gulp.watch(paths.scripts, function() {
         return pipes.builtAppScriptsDev()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch html partials
     gulp.watch(paths.partials, function() {
         return pipes.builtPartialsDev()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch styles
     gulp.watch(paths.styles, function() {
         return pipes.builtStylesDev()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
-
 });
 
 // clean, build, and watch live changes to the prod environment
 gulp.task('watch-prod', ['clean-build-app-prod', 'validate-devserver-scripts'], function() {
 
-    // start nodemon to auto-reload the dev server
-    plugins.nodemon({ script: 'server.js', ext: 'js', watch: ['devServer/'], env: {NODE_ENV : 'production'} })
-        .on('change', ['validate-devserver-scripts'])
-        .on('restart', function () {
-            console.log('[nodemon] restarted dev server');
-        });
-
-    // start live-reload server
-    plugins.livereload.listen({start: true});
+    // Serve files from the root of this project
+    browserSync.init({
+        server: {
+            baseDir: paths.distProd
+        }
+    });
 
     // watch index
     gulp.watch(paths.index, function() {
         return pipes.builtIndexProd()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch app scripts
     gulp.watch(paths.scripts, function() {
         return pipes.builtAppScriptsProd()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch hhtml partials
     gulp.watch(paths.partials, function() {
         return pipes.builtAppScriptsProd()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
     // watch styles
     gulp.watch(paths.styles, function() {
         return pipes.builtStylesProd()
-            .pipe(plugins.livereload());
+            .pipe(reload({stream:true}));
     });
 
 });
